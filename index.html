@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Common Assessment Bahasa Indonesia BAB III</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { user-select: none; -webkit-user-select: none; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .stimulus-text p { margin-bottom: 0.75rem; }
+        .hint-anim { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans" oncontextmenu="return false;">
+
+    <!-- HALAMAN AWAL (IDENTITAS & PERINGATAN) -->
+    <section id="start-screen" class="h-full flex items-center justify-center p-4 z-50 absolute inset-0 bg-gray-100">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-black text-blue-700 uppercase">Common Assessment</h1>
+                <h2 class="text-lg font-semibold text-gray-700">Bahasa Indonesia BAB III</h2>
+                <p class="text-sm text-gray-500 mt-1">Kisi-kisi: Teks Rekon, Fakta/Opini, & Kebahasaan</p>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-1">Nama Lengkap</label>
+                    <input type="text" id="input-nama" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Masukkan nama Anda..." required autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-1">Kelas</label>
+                    <input type="text" id="input-kelas" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Contoh: IX - A" required autocomplete="off">
+                </div>
+            </div>
+
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded text-sm text-red-800 text-justify">
+                <strong>⚠️ PERINGATAN KERAS:</strong><br>
+                Ujian ini diawasi oleh sistem *Anti-Cheat*. Anda <b>DILARANG KERAS</b> meninggalkan halaman ujian, membuka *tab* baru, atau meminimalkan *browser*. Pelanggaran lebih dari <b>3 kali</b> akan mengakibatkan ujian dihentikan secara sepihak.
+            </div>
+
+            <button onclick="startExam()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition text-lg">Mulai Ujian Sekarang</button>
+        </div>
+    </section>
+
+    <!-- HEADER UJIAN -->
+    <header id="exam-header" class="bg-blue-700 text-white p-4 shadow-md flex justify-between items-center z-10 hidden">
+        <div>
+            <h1 class="text-xl font-bold">Asesmen BAB III</h1>
+            <p class="text-sm text-blue-200">Siswa: <span id="display-nama-header" class="font-bold"></span> | Kelas: <span id="display-kelas-header"></span></p>
+        </div>
+        <div class="flex items-center gap-6">
+            <div id="peringatan-cheat" class="text-yellow-300 font-bold bg-red-800 px-3 py-1 rounded hidden">
+                ⚠️ Pelanggaran Tab: <span id="cheat-count">0</span>/3
+            </div>
+            <div class="text-xl font-mono bg-blue-900 px-4 py-1 rounded shadow tracking-wider" id="timer">60:00</div>
+        </div>
+    </header>
+
+    <!-- AREA UJIAN -->
+    <main class="flex flex-1 overflow-hidden hidden" id="app-container">
+        <!-- Area Kiri: Soal -->
+        <section class="flex-1 p-6 overflow-y-auto" id="question-area">
+            <div class="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto min-h-full relative flex flex-col">
+                <div class="flex justify-between items-center border-b pb-4 mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Soal No. <span id="q-num">1</span></h2>
+                    <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded font-bold uppercase" id="q-indicator">Indikator</span>
+                </div>
+                
+                <!-- Teks Stimulus -->
+                <div id="stimulus-container" class="mb-6 p-5 bg-blue-50/60 border-l-4 border-blue-500 rounded text-gray-800 text-justify leading-relaxed stimulus-text hidden text-sm md:text-base"></div>
+                
+                <!-- Pertanyaan & Tombol Hint -->
+                <div class="mb-6">
+                    <p id="question-text" class="text-lg text-gray-900 font-bold leading-snug"></p>
+                    <button onclick="toggleHint()" class="mt-3 flex items-center gap-2 text-sm text-yellow-600 font-bold hover:text-yellow-700 bg-yellow-50 px-3 py-1.5 rounded-full border border-yellow-200 transition">
+                        💡 Lihat Petunjuk (Hint)
+                    </button>
+                    <div id="hint-box" class="hidden mt-3 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 text-sm font-medium rounded hint-anim">
+                        <!-- Isi Hint -->
+                    </div>
+                </div>
+                
+                <!-- Opsi Jawaban -->
+                <div id="options-container" class="space-y-3 mb-8 flex-1"></div>
+
+                <!-- Navigasi Bawah -->
+                <div class="border-t pt-4 flex justify-between items-center mt-auto">
+                    <button onclick="prevQuestion()" id="btn-prev" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 transition font-medium">Sebelumnya</button>
+                    
+                    <label class="flex items-center gap-2 cursor-pointer bg-yellow-100 text-yellow-800 px-4 py-2 rounded border border-yellow-300 hover:bg-yellow-200 transition">
+                        <input type="checkbox" id="ragu-checkbox" onchange="toggleRagu()" class="w-5 h-5 accent-yellow-600">
+                        <span class="font-bold">Ragu-ragu</span>
+                    </label>
+
+                    <button onclick="nextQuestion()" id="btn-next" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-bold">Selanjutnya</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Area Kanan: Navigasi Sidebar -->
+        <aside class="w-80 bg-white border-l shadow-xl flex flex-col z-20">
+            <div class="p-4 bg-gray-50 border-b">
+                <h3 class="font-bold text-lg text-gray-800">Navigasi Soal</h3>
+                <div class="flex gap-4 mt-2 text-xs font-semibold text-gray-600">
+                    <div class="flex items-center gap-1"><div class="w-3 h-3 bg-green-500 rounded"></div> Dijawab</div>
+                    <div class="flex items-center gap-1"><div class="w-3 h-3 bg-yellow-400 rounded"></div> Ragu</div>
+                    <div class="flex items-center gap-1"><div class="w-3 h-3 bg-white border-2 border-gray-300 rounded"></div> Kosong</div>
+                </div>
+            </div>
+            
+            <div class="p-4 flex-1 overflow-y-auto">
+                <div id="nav-grid" class="grid grid-cols-5 gap-2"></div>
+            </div>
+
+            <div class="p-4 border-t bg-gray-50">
+                <button onclick="confirmSubmit()" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow transition text-lg">Kumpulkan Ujian</button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- HALAMAN HASIL (RESULT SCREEN) -->
+    <section id="result-screen" class="hidden h-full overflow-y-auto bg-gray-200 p-6 flex justify-center items-start">
+        <div class="max-w-2xl w-full mt-10">
+            <div id="result-pdf-area" class="bg-white p-10 rounded-xl shadow-2xl text-center mb-6 relative">
+                <div class="border-b-2 border-gray-800 pb-4 mb-6">
+                    <h2 class="text-3xl font-black text-gray-900 uppercase">Laporan Asesmen Akhir</h2>
+                    <p class="text-lg text-gray-700 font-semibold">Bahasa Indonesia BAB III (Literasi & Kebahasaan)</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6 text-left bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div>
+                        <span class="block text-sm text-gray-500">Nama Lengkap Siswa:</span>
+                        <span class="text-lg font-bold text-gray-800" id="res-nama"></span>
+                    </div>
+                    <div>
+                        <span class="block text-sm text-gray-500">Kelas:</span>
+                        <span class="text-lg font-bold text-gray-800" id="res-kelas"></span>
+                    </div>
+                </div>
+                
+                <div class="text-8xl font-black text-blue-700 mb-2" id="score-display">0</div>
+                <p class="text-xl text-gray-800 font-bold mb-8">SKOR NILAI AKHIR</p>
+                
+                <div class="grid grid-cols-2 gap-6 text-left mb-6">
+                    <div class="bg-green-100 p-4 rounded-lg border border-green-400">
+                        <span class="block text-sm text-green-800 font-bold mb-1">Total Jawaban Benar</span>
+                        <span class="text-3xl font-black text-green-700" id="benar-display">0</span>
+                    </div>
+                    <div class="bg-red-100 p-4 rounded-lg border border-red-400">
+                        <span class="block text-sm text-red-800 font-bold mb-1">Total Salah / Kosong</span>
+                        <span class="text-3xl font-black text-red-700" id="salah-display">0</span>
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-400 text-left border-t pt-4 font-mono">
+                    LOG SISTEM: <span id="result-reason"></span>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="downloadPDF()" class="flex-1 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg transition text-lg flex items-center justify-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Unduh Dokumen PDF
+                </button>
+                <button onclick="location.reload()" class="flex-1 py-4 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-lg shadow-lg transition text-lg">Keluar Aplikasi</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL PERINGATAN CHEATING -->
+    <div id="modal-peringatan" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md text-center border-t-8 border-red-600">
+            <h3 class="text-2xl font-black text-red-600 mb-2">PERINGATAN KERAS!</h3>
+            <p class="text-gray-800 text-lg mb-4">Anda terdeteksi meninggalkan halaman ujian atau berpindah tab. Pelanggaran ke: <strong class="text-red-600 text-xl" id="modal-cheat-count">1</strong> dari maksimal 3.</p>
+            <p class="text-sm text-gray-600 mb-6 bg-gray-100 p-2 rounded">Sistem membekukan layar Anda sementara. Harap kembali fokus mengerjakan di halaman ini.</p>
+            <button onclick="document.getElementById('modal-peringatan').classList.add('hidden')" class="w-full py-3 bg-red-600 text-white font-bold rounded hover:bg-red-700 transition">Saya Mengerti & Kembali Ujian</button>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIKA -->
+    <script>
+        const teks1 = "<p>Penemuan telegraf oleh Samuel Morse pada tahun 1837 menandai babak baru dalam sejarah evolusi komunikasi manusia. Pesan krusial yang sebelumnya membutuhkan waktu berminggu-minggu untuk dikirimkan melalui jalur maritim komersial, kini dapat ditransmisikan dalam hitungan menit melintasi jaringan kabel panjang menggunakan instrumen sandi morse. Kendati bersifat revolusioner, sistem ini mengandalkan proses teknis yang kaku, karena memaksa operatornya memiliki keahlian khusus dan sertifikasi dalam menerjemahkan pola titik dan garis sandi tersebut.</p><p>Menyadari tingginya keterbatasan teknis tersebut, Alexander Graham Bell mengembangkan konsep telepon pada tahun 1876. Mesin komunikasi ini beroperasi secara dinamis dengan cara mentransformasikan gelombang suara lisan manusia menjadi sinyal arus listrik yang mengalir secara konstan melalui kabel, lalu merakitnya kembali menjadi frekuensi suara di titik tujuan. Inovasi ini secara drastis menghapus hambatan ruang, batasan waktu, dan tuntutan keahlian teknis yang membebani masyarakat saat berkomunikasi jarak jauh.</p>";
+
+        const teks2 = "<p>(1) Pengalaman menghadiri lokakarya jurnalistik digital bulan lalu memberikan banyak perspektif baru bagi diriku mengenai lanskap informasi modern. (2) Acara tersebut diselenggarakan di aula utama Perpustakaan Nasional dan dihadiri oleh seratus dua puluh peserta yang berasal dari berbagai instansi pendidikan menengah. (3) Menurut hemat saya, penyelenggaraan pelatihan literasi semacam ini amat krusial di tengah derasnya gempuran informasi tanpa filter di era media sosial saat ini.</p><p>(4) Pada salah satu sesi inti, pemateri ahli mendemonstrasikan secara langsung prosedur melacak jejak digital sebuah foto amatir yang diklaim sebagai bukti otentik dari suatu bencana alam. (5) Berbekal perangkat lunak penelusuran citra visual, foto yang sempat viral dan menyulut kepanikan di dunia maya tersebut secara meyakinkan terbukti sebagai potongan adegan dari sebuah film fiksi ilmiah luar negeri.</p>";
+
+        const teks3 = "<p>(1) Kementerian Komunikasi dan Informatika secara resmi memblokir lebih dari seribu situs web ilegal pada triwulan pertama tahun kalender ini. (2) Kebijakan represif yang dieksekusi secara masif ini dinilai sangat brilian dan luar biasa oleh sebagian besar pemerhati keamanan siber di tanah air. (3) Data forensik digital menunjukkan bahwa estimasi perputaran uang di jaringan situs terlarang tersebut telah menyentuh angka dua triliun rupiah per bulannya. (4) Ke depannya, seluruh lapisan masyarakat tanpa terkecuali dituntut untuk jauh lebih proaktif dan bersikap skeptis dalam menyeleksi serta melaporkan entitas digital yang berpotensi merugikan negara.</p>";
+
+        // Database 20 Soal Sesuai Kisi-kisi
+        const questions = [
+            // INDIKATOR 1-5 (TEKS 1)
+            { id: 1, indicator: "Informasi Tersurat", stimulus: teks1, hint: "Fokuslah pada kelemahan alat komunikasi yang ditemukan pada tahun 1837 berdasarkan paragraf pertama.", question: "Berdasarkan informasi yang tersurat dalam teks di atas, manakah pernyataan yang paling akurat?", options: ["Telegraf memanfaatkan gelombang suara manusia secara utuh untuk dikirimkan melalui menara nirkabel.", "Penggunaan telegraf membutuhkan tingkat keterampilan spesifik dan keahlian untuk menerjemahkan sandi.", "Alexander Graham Bell merancang mesin morse khusus agar mudah digunakan oleh kaum awam masyarakat.", "Pesan tertulis melalui kapal laut terbukti memiliki durasi pengiriman yang lebih cepat dari kabel telegraf."], answer: 1 },
+            { id: 2, indicator: "Informasi Umum", stimulus: teks1, hint: "Pahami garis besar atau topik utama dari awal paragraf pertama hingga akhir paragraf kedua.", question: "Ide atau informasi umum yang memayungi keseluruhan isi teks rekon faktual tersebut membahas tentang...", options: ["Dampak negatif radiasi perangkat gelombang elektromagnetik terhadap kesehatan masyarakat masa lalu.", "Dinamika persaingan perniagaan yang kompetitif antara Samuel Morse dan Alexander Graham Bell.", "Evolusi perangkat komunikasi mekanik jarak jauh beserta tahap penyempurnaan fungsi operasionalnya.", "Mekanisme pembangunan infrastruktur kabel tembaga di bawah laut untuk menghubungkan antarbenua."], answer: 2 },
+            { id: 3, indicator: "Pertanyaan berdasarkan Teks", stimulus: teks1, hint: "Cari pertanyaan yang jawabannya dapat ditemukan secara tertulis di dalam paragraf kedua teks tersebut.", question: "Pertanyaan manakah yang jawabannya secara eksplisit dapat ditemukan di dalam informasi teks tersebut?", options: ["Mengapa telepon cetak ciptaan Graham Bell pada awalnya hanya diproduksi secara massal di benua Eropa?", "Bagaimana mekanisme dasar kerja telepon dalam mentransformasikan dan mengantarkan pesan suara?", "Berapa total anggaran biaya yang dihabiskan Samuel Morse guna membangun konstruksi telegraf pertamanya?", "Siapa tokoh ilmuwan yang pertama kali merumuskan konsep pertukaran frekuensi menggunakan sandi rahasia?"], answer: 1 },
+            { id: 4, indicator: "Ide Pokok Paragraf", stimulus: teks1, hint: "Paragraf kedua berfokus pada inovasi baru yang lahir akibat kelemahan dari mesin sebelumnya.", question: "Gagasan pokok atau ide utama yang mendasari penulisan paragraf kedua pada teks tersebut adalah...", options: ["Tingkat kesulitan masyarakat pada masa prasejarah dalam merumuskan dan mempelajari sandi morse.", "Revolusi pengiriman paket kargo yang memanfaatkan teknologi transportasi kapal laut komersial massal.", "Proses penciptaan dan cara kerja teknologi telepon sebagai solusi nyata atas batasan komunikasi telegraf.", "Gerakan penolakan warga sipil atas proyek masuknya jaringan kabel beraliran listrik di kawasan perdesaan."], answer: 2 },
+            { id: 5, indicator: "Kalimat Utama", stimulus: teks1, hint: "Kalimat utama memuat gagasan paling luas/umum yang kemudian dijabarkan oleh kalimat-kalimat rincian lainnya.", question: "Berdasarkan struktur penyampaian gagasannya, kalimat utama pada paragraf pertama terletak pada...", options: ["Kalimat pertama, sebab ia berfungsi merangkum gagasan pembuka mengenai era baru komunikasi manusia.", "Kalimat kedua, sebab ia secara dramatis membandingkan durasi pengiriman antara telegraf dan kapal laut.", "Kalimat ketiga, sebab ia membongkar fakta bahwa alat tersebut menuntut keahlian khusus kepada pengerjanya.", "Kalimat terakhir, sebab ia merumuskan simpulan akhir mengenai penghapusan seluruh hambatan komunikasi."], answer: 0 },
+            
+            // INDIKATOR 6-10 (TEKS 2)
+            { id: 6, indicator: "Fakta dan Pendapat (Identifikasi Fakta)", stimulus: teks2, hint: "Fakta mengandung informasi riil berupa data, angka, lokasi, atau kejadian lampau yang sudah benar-benar terjadi.", question: "Di antara sekumpulan pernyataan berikut, manakah kalimat yang secara struktur memenuhi kriteria sebagai sebuah FAKTA?", options: ["Kalimat (1), karena memaparkan konklusi subjektif dan pandangan narator atas dampak psikologis lokakarya.", "Kalimat (2), karena menyajikan data kuantitas jumlah hadirin serta lokasi kejadian yang dapat diverifikasi ulang.", "Kalimat (3), karena merumuskan rekomendasi atau imbauan personal terkait urgensi penanganan literasi digital.", "Kalimat (4), karena mendeskripsikan opini sang ahli mengenai besarnya potensi manipulasi visual di internet."], answer: 1 },
+            { id: 7, indicator: "Membedakan Fakta dan Pendapat", stimulus: teks2, hint: "Cari sepasang kalimat; yang satu berisi keyakinan pribadi ('menurut...'), yang satunya lagi berisi rekam jejak kejadian/pembuktian alat.", question: "Berdasarkan rincian teks di atas, manakah analisis perbandingan kalimat fakta dan pendapat yang paling akurat?", options: ["Kalimat (1) merupakan parameter fakta objektif, sementara kalimat (5) merupakan hipotesis dan pendapat subjektif.", "Kalimat (2) merupakan parameter pendapat logis, sementara kalimat (4) merupakan fakta jurnalistik dari sang penulis.", "Kalimat (3) merupakan parameter pendapat subjektif, sementara kalimat (5) merupakan fakta pembuktian forensik.", "Kalimat (4) merupakan parameter pendapat imajinatif, sementara kalimat (1) merupakan fakta kejadian yang valid."], answer: 2 },
+            { id: 8, indicator: "Analisis Isi Teks (Evaluasi)", stimulus: teks2, hint: "Perhatikan nasib foto yang digunakan oleh pemateri di sesi inti, apakah berita tersebut nyata atau fiktif?", question: "Melalui proses analisis terhadap kutipan rekon pribadi di atas, simpulan pernyataan yang secara logis BENAR adalah...", options: ["Penulis menganggap pelatihan tersebut membuang banyak waktu karena dirinya telah berstatus sebagai ahli digital.", "Foto materi yang diinvestigasi pada sesi inti lokakarya tersebut merupakan dokumentasi realitas alam yang sah.", "Agenda utama lokakarya berfokus membekali partisipannya dengan kemampuan memvalidasi otentisitas informasi.", "Acara seminar jurnalistik tersebut diselenggarakan secara terbuka tanpa atap di kawasan pelataran perpustakaan."], answer: 2 },
+            { id: 9, indicator: "Simpulan Teks", stimulus: teks2, hint: "Simpulan menggabungkan inti permasalahan (bahaya misinformasi) dan hikmah/solusi (pentingnya pelatihan verifikasi) dari teks.", question: "Kesimpulan komprehensif yang dapat direkonstruksi berdasarkan pengalaman literasi sang pencerita adalah...", options: ["Seluruh narasi informasi dan gambar visual yang beredar luas di media sosial terbukti hanyalah fabrikasi kebohongan murni.", "Penguasaan instrumen verifikasi digital mutlak diperlukan guna membongkar manipulasi dan menangkal arus disinformasi.", "Pihak pengelola perpustakaan nasional diwajibkan membatasi akses baca masyarakat umum terhadap buku beraliran fiksi.", "Penulis membuat keputusan final untuk mengalihkan profesinya menjadi seorang agen investigasi independen di masa depan."], answer: 1 },
+            { id: 10, indicator: "Struktur Teks Rekon", stimulus: teks2, hint: "Bagian pembuka teks rekon biasanya digunakan untuk mengenalkan tokoh, lokasi (latar), dan awalan peristiwa.", question: "Apabila ditelaah berdasarkan kaidah teks rekon, kalimat nomor (1) dan (2) menduduki fungsi struktural sebagai tahap...", options: ["Orientasi, karena berfungsi mengantarkan latar belakang peristiwa, menunjuk lokasi, serta mengidentifikasi subjek pelaku.", "Rangkaian peristiwa, karena memuat pergesekan klimaks dari konflik psikologis yang sedang diselesaikan oleh sang narator.", "Reorientasi, karena menyediakan rubrik penutup berisi proyeksi masa depan dan penilaian historis dari pihak pengamat ahli.", "Koda struktural, karena merangkum deretan amanat moral atau pesan filosofis eksplisit yang ditujukan langsung bagi audiens."], answer: 0 },
+            
+            // INDIKATOR 11-17 (KEBAHASAAN & LOGIKA)
+            { id: 11, indicator: "Kronologi Peristiwa", stimulus: "Susunlah acak kalimat berikut menjadi paragraf rekon yang padu:<br>(1) Di pertengahan acara, panitia tiba-tiba menginstruksikan kami untuk menelaah sebuah tautan situs asing yang mencurigakan.<br>(2) Akhirnya, berbekal pengetahuan baru, kami semua berhasil membuktikan bahwa narasi di situs tersebut seratus persen hoaks.<br>(3) Tepat kemarin pagi, delegasi kelasku menghadiri kegiatan simulasi deteksi kejahatan siber yang bertempat di ruang laboratorium.<br>(4) Acara tersebut diawali dengan sambutan dari narasumber kepolisian mengenai maraknya aksi manipulasi data di jejaring sosial.", hint: "Urutan yang benar diawali dengan latar waktu/tempat kejadian, dilanjutkan dengan awalan acara, instruksi tak terduga, dan diakhiri dengan pencapaian.", question: "Konstruksi kronologis yang paling koheren dan logis untuk merangkai kalimat-kalimat acak di atas adalah kombinasi...", options: ["(3) - (4) - (1) - (2)", "(4) - (2) - (1) - (3)", "(3) - (1) - (4) - (2)", "(4) - (1) - (3) - (2)"], answer: 0 },
+            { id: 12, indicator: "Konjungsi (Kata Hubung)", stimulus: "Lengkapilah teks rumpang berikut: <br><i>Sebagian besar warganet mudah termakan isu provokatif tersebut [...] mereka tidak meluangkan waktu untuk membaca badan berita secara holistik, [...] justru hanya mengevaluasi konten berbekal judul yang menjebak.</i>", hint: "Celah pertama menunjukkan alasan/penyebab (kausalitas), sementara celah kedua menunjukkan pertentangan (korelatif).", question: "Pasangan konjungsi yang secara gramatikal paling presisi untuk menutup dua bagian rumpang pada kalimat tersebut adalah...", options: ["sehingga, maupun", "apabila, meskipun", "karena, melainkan", "walaupun, padahal"], answer: 2 },
+            { id: 13, indicator: "Kata Serapan", stimulus: "Lengkapilah kalimat rumpang ini:<br><i>Setiap keping [...] yang berseliweran di kanal internet harus disaring oleh masyarakat agar tidak memperuncing masalah dan memicu [...] sosial antarwarga.</i>", hint: "Kata pertama bermakna berita/kabar. Kata kedua bermakna pembelahan atau perpecahan kelompok akibat perbedaan pandangan.", question: "Diksi serapan asing yang paling sesuai dengan kaidah dan konteks makna untuk melengkapi kalimat di atas adalah...", options: ["Publikasi, eksekusi", "Informasi, polarisasi", "Transportasi, mediasi", "Komunikasi, verifikasi"], answer: 1 },
+            { id: 14, indicator: "Makna Kata", stimulus: "Pemerintah pusat melalui kementerian terkait berupaya mempercepat strategi **mitigasi** guna menangkal lonjakan disinformasi menjelang pesta demokrasi.", hint: "Dalam konteks krisis atau bencana (termasuk hoaks), istilah ini merujuk pada upaya pencegahan keparahan.", question: "Definisi konseptual yang paling merepresentasikan makna dari kata bercetak tebal (mitigasi) pada kalimat di atas adalah...", options: ["Aktivitas memata-matai atau penyelidikan klandestin yang ditujukan untuk mengungkap identitas para penyebar kebohongan.", "Penjatuhan vonis sanksi hukum perdata dan pidana dengan bobot maksimal agar memberikan efek jera pada pelaku kejahatan.", "Rangkaian tindakan strategis dan sistematis yang dirancang untuk mengurangi atau meminimalkan kerugian dari risiko tertentu.", "Sikap pembiaran institusional terhadap sebuah fluktuasi masalah hingga situasi tersebut mereda secara organik dengan sendirinya."], answer: 2 },
+            { id: 15, indicator: "Makna Ungkapan", stimulus: "Akibat keluguannya dalam menyebarkan pesan siaran, paman Budi sering kali dijadikan **kambing hitam** setiap kali ada kegaduhan rumor palsu di dalam grup percakapan keluarga besarnya.", hint: "Orang ini sebenarnya bukan otak masalah utama, tetapi ia yang selalu disalahkan.", question: "Tafsir makna yang melekat secara kiasan pada ungkapan idiomatis bercetak tebal dalam struktur kalimat tersebut adalah...", options: ["Individu dominan yang secara kontinu menerima distribusi keuntungan finansial dari memburuknya suatu stabilitas relasi.", "Pihak pinggiran yang sejatinya tidak murni bersalah namun sengaja dipersalahkan untuk menutupi akar permasalahan sejati.", "Figur kepemimpinan yang bersedia mengambil alih seluruh beban kesalahan demi melindungi integritas anggota komunalnya.", "Karakter antagonis yang memiliki kebiasaan mendistribusikan ancaman nir-bukti kepada para anggota perserikatan lainnya."], answer: 1 },
+            { id: 16, indicator: "Kalimat Efektif", stimulus: "Kalimat tidak efektif: <br><i>Bagi semua para peserta-peserta seminar edukasi literasi digital diharap agar supaya segera masuk ke dalam ruangan aula.</i>", hint: "Hilangkan kata-kata yang maknanya tumpang tindih (pleonasme) seperti gabungan kata 'semua', 'para', dan pengulangan 'peserta-peserta'.", question: "Hasil perbaikan sintaksis yang menjadikan susunan di atas sebagai bentuk kalimat yang padat dan efektif adalah...", options: ["Bagi seluruh peserta-peserta seminar literasi digital agar supaya segera berkumpul di aula.", "Para peserta-peserta edukasi literasi digital semua diharap agar langsung masuk ke ruangan aula.", "Semua para peserta seminar edukasi digital diharapkan segera masuk ke dalam ruangan aula.", "Seluruh peserta seminar edukasi literasi digital diharapkan segera masuk ke ruangan aula."], answer: 3 },
+            { id: 17, indicator: "Kata Baku", stimulus: "Saya bermaksud [...] piranti lunak anti-virus tersebut ke dalam gawai pintar, namun protokol sistem jaringan secara sepihak mewajibkan pengguna untuk [...] rincian data privasi yang rentan disalahgunakan.", hint: "Kata baku dari asal kata 'install' yang diberi awalan meng- adalah menginstal. Asal kata 'suplai' dengan awalan me- adalah menyuplai.", question: "Dua bentuk kata kerja baku menurut kaidah PUEBI yang paling tepat untuk menutup celah rumpang kalimat tersebut adalah...", options: ["meng-install, mensuplai", "menginstal, menyuplai", "menginsal, men-suplay", "menginstal, mensuplay"], answer: 1 },
+            
+            // INDIKATOR 18-20 (TEKS 4: ANALISIS FAKTA & OPINI TEKS)
+            { id: 18, indicator: "Analisis Fakta", stimulus: teks3, hint: "Pernyataan yang memuat informasi statistik riil (seperti nominal uang) dan aksi yang benar-benar terjadi tergolong ke dalam fakta.", question: "Jika dianalisis secara spesifik melalui lensa jurnalistik, rangkaian pernyataan manakah yang murni mengandung unsur FAKTA?", options: ["Kombinasi (1) dan (2), dengan alasan bahwa kedua kalimat tersebut mendeskripsikan tindakan ketegasan aparat pemerintah yang menuai pujian.", "Kombinasi (2) dan (4), dengan alasan bahwa kedua kalimat tersebut menyuarakan resolusi positif terkait pencegahan peretasan di masa mendatang.", "Kombinasi (1) dan (3), dengan alasan bahwa kedua kalimat tersebut melaporkan catatan tindakan empiris dan metrik finansial berskala pasti.", "Kombinasi (3) dan (4), dengan alasan bahwa kedua kalimat tersebut menitikberatkan kritik tajam ihwal nilai kerugian yang membebani masyarakat."], answer: 2 },
+            { id: 19, indicator: "Analisis Pendapat", stimulus: teks3, hint: "Kalimat pendapat ditandai oleh adjektiva penilaian subjektif (misal: 'sangat brilian') dan tuntutan/harapan untuk peristiwa di masa depan.", question: "Sebaliknya, rumusan pernyataan bernomor berapakah yang terkonfirmasi memuat opini, asumsi, atau PENDAPAT penilaian penutur?", options: ["Kombinasi (1) dan (3), karena strukturnya mengekspos paparan kalkulasi ekonomi digital yang tingkat akurasi laporannya masih sangat bisa diperdebatkan.", "Kombinasi (2) dan (4), karena strukturnya mengakomodasi unsur penafsiran nilai estetis sebuah kebijakan serta imbauan idealitas yang belum terlaksana.", "Kombinasi (1) dan (4), karena strukturnya dibangun untuk mendikte warga sipil agar senantiasa tunduk di bawah peraturan pembatasan oleh pihak otoritas.", "Kombinasi (2) dan (3), karena strukturnya merupakan derivasi langsung dari hipotesis operasional yang tengah diuji coba oleh lembaga peradilan siber."], answer: 1 },
+            { id: 20, indicator: "Analisis & Evaluasi Kebenaran Teks", stimulus: teks3, hint: "Pahami benang merah dari teks: pemerintah mengambil langkah pemblokiran situs ilegal demi memutus perputaran uang kotor berjumlah besar.", question: "Langkah konseptual guna mengevaluasi integritas informasi yang ada di dalam kutipan teks rekon tersebut akan menghasilkan kesimpulan bahwa...", options: ["Institusi negara telah angkat tangan dan secara terbuka tidak memberlakukan mitigasi apa pun dalam merespons invasi aplikasi ilegal.", "Lonjakan luar biasa perputaran dana gelap mengonfirmasi bahwa komunitas daring Indonesia sepenuhnya buta terhadap regulasi internet.", "Operasi pemblokiran massal portal terlarang merupakan reaksi berbasis perhitungan forensik dalam meredam sirkulasi dana kejahatan virtual.", "Konsorsium pakar siber secara aklamasi melontarkan kecaman keras atas taktik aparat karena dianggap mengebiri kebebasan hak asasi berekspresi."], answer: 2 }
+        ];
+
+        let currentIndex = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+        let userRagu = new Array(questions.length).fill(false);
+        let isSubmitted = false;
+        let cheatCount = 0;
+        let studentName = "";
+        let studentClass = "";
+
+        // Anti Copy Paste & Inspect Element Basic
+        window.onload = () => { document.addEventListener("copy", (e) => e.preventDefault()); };
+
+        function startExam() {
+            studentName = document.getElementById("input-nama").value.trim();
+            studentClass = document.getElementById("input-kelas").value.trim();
+
+            if (!studentName || !studentClass) {
+                alert("Harap lengkapi pengisian Nama Lengkap dan Kelas untuk melanjutkan.");
+                return;
+            }
+
+            document.getElementById("display-nama-header").innerText = studentName;
+            document.getElementById("display-kelas-header").innerText = studentClass;
+
+            document.getElementById("start-screen").classList.add("hidden");
+            document.getElementById("exam-header").classList.remove("hidden");
+            document.getElementById("app-container").classList.remove("hidden");
+
+            renderNavGrid();
+            showQuestion(0);
+            startTimer(3600); // 60 menit
+
+            document.addEventListener("visibilitychange", handleVisibilityChange);
+        }
+
+        function renderNavGrid() {
+            const grid = document.getElementById("nav-grid");
+            grid.innerHTML = "";
+            questions.forEach((q, i) => {
+                const btn = document.createElement("button");
+                let bClass = "bg-white text-gray-700 border-gray-300 hover:bg-gray-100";
+                if (i === currentIndex) bClass = "border-blue-700 bg-blue-100 text-blue-800 ring-2 ring-blue-500 scale-105 shadow";
+                else if (userRagu[i]) bClass = "bg-yellow-400 text-yellow-900 border-yellow-500";
+                else if (userAnswers[i] !== null) bClass = "bg-green-500 text-white border-green-600";
+                
+                btn.className = `w-full aspect-square flex items-center justify-center font-bold text-sm rounded border transition ${bClass}`;
+                btn.innerText = i + 1;
+                btn.onclick = () => showQuestion(i);
+                grid.appendChild(btn);
+            });
+        }
+
+        function showQuestion(index) {
+            currentIndex = index;
+            const q = questions[index];
+            
+            document.getElementById("q-num").innerText = q.id;
+            document.getElementById("q-indicator").innerText = q.indicator;
+            
+            // Render Stimulus
+            const stimBox = document.getElementById("stimulus-container");
+            if (q.stimulus) {
+                stimBox.innerHTML = q.stimulus;
+                stimBox.classList.remove("hidden");
+            } else {
+                stimBox.classList.add("hidden");
+            }
+
+            // Render Soal & Hint Reset
+            document.getElementById("question-text").innerHTML = q.question;
+            const hintBox = document.getElementById("hint-box");
+            hintBox.innerHTML = q.hint;
+            hintBox.classList.add("hidden"); // Sembunyikan hint tiap ganti soal
+            
+            // Render Opsi
+            const optBox = document.getElementById("options-container");
+            optBox.innerHTML = "";
+            
+            q.options.forEach((opt, optIdx) => {
+                const isChecked = userAnswers[index] === optIdx;
+                const label = document.createElement("label");
+                label.className = `flex items-start p-4 border-2 rounded-xl cursor-pointer transition ${isChecked ? 'bg-blue-50 border-blue-600 shadow-md' : 'bg-white hover:bg-gray-50 border-gray-200'}`;
+                label.innerHTML = `
+                    <div class="mt-1">
+                        <input type="radio" name="q_opt" value="${optIdx}" class="w-5 h-5 text-blue-600 focus:ring-blue-500" 
+                        ${isChecked ? 'checked' : ''} onchange="selectOption(${index}, ${optIdx})">
+                    </div>
+                    <span class="ml-4 text-gray-800 font-medium text-base leading-relaxed text-justify w-full">
+                        <span class="font-bold mr-2">${String.fromCharCode(65 + optIdx)}.</span> ${opt}
+                    </span>
+                `;
+                optBox.appendChild(label);
+            });
+
+            document.getElementById("ragu-checkbox").checked = userRagu[index];
+            document.getElementById("btn-prev").disabled = index === 0;
+            document.getElementById("btn-next").innerText = index === questions.length - 1 ? "SELESAI" : "Selanjutnya";
+            
+            renderNavGrid();
+            document.getElementById("question-area").scrollTop = 0; // Scroll ke atas
+        }
+
+        // FUNGSI MENAMPILKAN HINT
+        function toggleHint() {
+            const hintBox = document.getElementById("hint-box");
+            if(hintBox.classList.contains("hidden")) {
+                hintBox.classList.remove("hidden");
+            }
+        }
+
+        function selectOption(qIndex, optIndex) {
+            userAnswers[qIndex] = optIndex;
+            showQuestion(qIndex);
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) showQuestion(currentIndex + 1);
+            else confirmSubmit();
+        }
+        function prevQuestion() {
+            if (currentIndex > 0) showQuestion(currentIndex - 1);
+        }
+        function toggleRagu() {
+            userRagu[currentIndex] = document.getElementById("ragu-checkbox").checked;
+            renderNavGrid();
+        }
+
+        function startTimer(seconds) {
+            const timerEl = document.getElementById("timer");
+            const interval = setInterval(() => {
+                if(isSubmitted) { clearInterval(interval); return; }
+                seconds--;
+                let m = Math.floor(seconds / 60);
+                let s = seconds % 60;
+                timerEl.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if(seconds <= 300) timerEl.classList.add("text-red-400", "animate-pulse"); // Peringatan 5 menit
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    forceSubmit("Batas waktu durasi ujian (60 Menit) telah habis.");
+                }
+            }, 1000);
+        }
+
+        function handleVisibilityChange() {
+            if (document.hidden && !isSubmitted) {
+                cheatCount++;
+                document.getElementById("peringatan-cheat").classList.remove("hidden");
+                document.getElementById("cheat-count").innerText = cheatCount;
+                
+                if (cheatCount >= 3) {
+                    forceSubmit("Sistem Anti-Cheat menghentikan ujian paksa akibat mendeteksi perpindahan tab melebihi batas toleransi.");
+                } else {
+                    document.getElementById("modal-cheat-count").innerText = cheatCount;
+                    document.getElementById("modal-peringatan").classList.remove("hidden");
+                }
+            }
+        }
+
+        function confirmSubmit() {
+            const unans = userAnswers.filter(a => a === null).length;
+            const ragu = userRagu.filter(r => r === true).length;
+            
+            let msg = "Anda yakin ingin mengakhiri dan memproses penilaian ujian?\n\n";
+            if(unans > 0) msg += `⚠️ ${unans} soal terpantau BELUM dijawab.\n`;
+            if(ragu > 0) msg += `⚠️ ${ragu} soal masih ditandai RAGU-RAGU.\n`;
+            
+            if(confirm(msg)) submitExam("Telah diselesaikan secara sadar dan mandiri oleh siswa bersangkutan.");
+        }
+
+        function forceSubmit(reason) {
+            document.getElementById('modal-peringatan').classList.add('hidden');
+            alert("INTERVENSI SISTEM: " + reason);
+            submitExam(reason);
+        }
+
+        function submitExam(reasonText) {
+            isSubmitted = true;
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            
+            let correct = 0;
+            userAnswers.forEach((ans, i) => { if (ans === questions[i].answer) correct++; });
+            const score = (correct / questions.length) * 100;
+            
+            document.getElementById("app-container").classList.add("hidden");
+            document.getElementById("exam-header").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            
+            document.getElementById("res-nama").innerText = studentName;
+            document.getElementById("res-kelas").innerText = studentClass;
+            document.getElementById("score-display").innerText = Math.round(score);
+            document.getElementById("benar-display").innerText = correct;
+            document.getElementById("salah-display").innerText = questions.length - correct;
+            document.getElementById("result-reason").innerText = reasonText;
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('result-pdf-area');
+            const cleanName = studentName.replace(/\s+/g, '_');
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5],
+                filename:     `Laporan_Asesmen_${cleanName}.pdf`,
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>
